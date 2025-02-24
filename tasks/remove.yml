@@ -1,0 +1,34 @@
+---
+- name: remove_docker_container {{ docker_container_authentik_name }}
+  community.docker.docker_container: 
+    name: "{{ docker_container_authentik_name }}"    
+    container_default_behavior: no_defaults
+    keep_volumes: "{{ docker_container_authentik_keep_volumes | default(true) }}"
+    state: absent
+
+- name: remove_docker_container {{ docker_container_authentikworker_name }}
+  community.docker.docker_container: 
+    name: "{{ docker_container_authentikworker_name }}"    
+    container_default_behavior: no_defaults
+    keep_volumes: "{{ docker_container_authentikworker_keep_volumes | default(true) }}"
+    state: absent
+
+- name: remove_docker_container {{ docker_container_authentikredis_name }}
+  community.docker.docker_container: 
+    name: "{{ docker_container_authentikredis_name }}"    
+    container_default_behavior: no_defaults
+    keep_volumes: "{{ docker_container_authentikredis_keep_volumes | default(true) }}"
+    state: absent
+
+- name: remove_docker_container {{ docker_container_authentikdb_name }}
+  community.docker.docker_container: 
+    name: "{{ docker_container_authentikdb_name }}"    
+    container_default_behavior: no_defaults
+    keep_volumes: "{{ docker_container_authentikdb_keep_volumes | default(true) }}"
+    state: absent
+
+- name: remove_docker_network {{ docker_network_authentik_name }}
+  community.docker.docker_network:
+    name: "{{ docker_network_authentik_name }}"
+    force: yes
+    state: absent

@@ -1,0 +1,83 @@
+---
+- hosts: localhost
+  remote_user: root
+  vars:
+
+    docker_container_authentik_database_user: "authentik"
+    docker_container_authentik_database_password: "Test83cjie839287263"
+    docker_container_authentik_secret_key: "Gtdge1dmy7toLTQ+RF/7Xb6xSe1Yz7483s9s9393mckdhsrivz9giIAOI828djdkeoeubcsDkCSH/hSBZ2"
+
+    docker_container_authentik_mailer_username: "test@test.local"
+    docker_container_authentik_mailer_password: "8388ccndjeiedji.y.oewIieud"
+    docker_container_authentik_mailer_smtp_address: "mail.local"
+    docker_container_authentik_mailer_smtp_port: "465"
+    docker_container_authentik_mailer_from: "test@test.local"
+    
+    docker_container_authentik_server_hostname: "{{ docker_container_authentik_name }}"
+    docker_container_authentik_server_fqdn: "{{ docker_container_authentik_server_hostname }}.{{ docker_container__base__dns_domain }}"
+
+    docker_container_authentik_labels:
+      traefik.enable: "true"
+      traefik.http.routers.authentik.rule: "Host(`{{ docker_container_authentik_server_fqdn }}`)"
+      traefik.http.routers.authentik.entrypoints: http
+      traefik.http.routers.authentik.service: authentik
+      traefik.http.routers.authentik.middlewares: https_redirect_permanent@file
+      # HTTPS
+      traefik.http.routers.authentik_ssl.rule: "Host(`{{ docker_container_authentik_server_fqdn }}`)"
+      traefik.http.routers.authentik_ssl.entrypoints: https
+      traefik.http.routers.authentik_ssl.service: authentik
+      traefik.http.routers.authentik_ssl.tls: "true"
+      traefik.http.routers.authentik_ssl.tls.certResolver: le
+      traefik.http.routers.authentik_ssl.tls.options: default
+      traefik.http.routers.authentik_ssl.tls.domains[0].main: "{{ docker_container__base__dns_domain }}"
+      traefik.http.routers.authentik_ssl.tls.domains[0].sans: "*.{{ docker_container__base__dns_domain }}"
+      # Service
+      traefik.http.services.authentik.loadbalancer.server.port: "9000"
+
+
+    docker_container_authentik_networks:
+      - name: "{{ docker_network_authentik_name }}"
+        links:
+          - "{{ docker_container_authentikdb_name }}:db"
+          - "{{ docker_container_authentikredis_name }}:redis"
+      - name: "{{ docker_network_traefik_name }}"
+
+    docker_container_authentik_ports: []
+
+    docker_container_authentik_env:
+      AUTHENTIK_REDIS__HOST: "redis"
+      AUTHENTIK_POSTGRESQL__HOST: "db"
+      AUTHENTIK_POSTGRESQL__USER: "{{ docker_container_authentik_database_user }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ docker_container_authentik_database_name }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "{{ docker_container_authentik_database_password }}"
+      AUTHENTIK_SECRET_KEY: "{{ docker_container_authentik_secret_key }}"
+      AUTHENTIK_EMAIL__HOST: "{{ docker_container_authentik_mailer_smtp_address }}"
+      AUTHENTIK_EMAIL__PORT: "{{ docker_container_authentik_mailer_smtp_port }}"
+      AUTHENTIK_EMAIL__USERNAME: "{{ docker_container_authentik_mailer_username }}"
+      AUTHENTIK_EMAIL__PASSWORD: "{{ docker_container_authentik_mailer_password }}"
+      # AUTHENTIK_EMAIL__USE_TLS: "false"
+      AUTHENTIK_EMAIL__USE_SSL: "true"
+      AUTHENTIK_EMAIL__TIMEOUT: "10"
+      AUTHENTIK_EMAIL__FROM: "{{ docker_container_authentik_mailer_from }}"
+
+    docker_container_authentikworker_env:
+      AUTHENTIK_REDIS__HOST: "redis"
+      AUTHENTIK_POSTGRESQL__HOST: "db"
+      AUTHENTIK_POSTGRESQL__USER: "{{ docker_container_authentik_database_user }}"
+      AUTHENTIK_POSTGRESQL__NAME: "{{ docker_container_authentik_database_name }}"
+      AUTHENTIK_POSTGRESQL__PASSWORD: "{{ docker_container_authentik_database_password }}"
+      AUTHENTIK_SECRET_KEY: "{{ docker_container_authentik_secret_key }}"
+      AUTHENTIK_EMAIL__HOST: "{{ docker_container_authentik_mailer_smtp_address }}"
+      AUTHENTIK_EMAIL__PORT: "{{ docker_container_authentik_mailer_smtp_port }}"
+      AUTHENTIK_EMAIL__USERNAME: "{{ docker_container_authentik_mailer_username }}"
+      AUTHENTIK_EMAIL__PASSWORD: "{{ docker_container_authentik_mailer_password }}"
+      # Use StartTLS
+      # AUTHENTIK_EMAIL__USE_TLS: "false"
+      # Use SSL
+      AUTHENTIK_EMAIL__USE_SSL: "true"
+      AUTHENTIK_EMAIL__TIMEOUT: "10"
+      AUTHENTIK_EMAIL__FROM: "{{ docker_container_authentik_mailer_from }}"
+
+
+  roles:
+    - ansible-role-docker-container-authentik

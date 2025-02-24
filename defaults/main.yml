@@ -1,0 +1,568 @@
+---
+# defaults file for ansible-role-docker-container-authentik
+# https://docs.goauthentik.io/docs/install-config/install/docker-compose
+#
+# 1. To start the initial setup, navigate to http://<your server's IP or hostname>:9000/if/flow/initial-setup/.
+#
+# default user: akadmin
+
+# @var docker_container_authentik_database_name:description: Name of the database.
+docker_container_authentik_database_name: "authentik"
+
+# @var docker_container_authentik_database_user:description: Name of the database user.
+docker_container_authentik_database_user: "authentik"
+
+# @var docker_container_authentik_database_password:description: Password of the database user.
+docker_container_authentik_database_password: "authentiksomethingsecret8888"
+
+# @var docker_container_authentik_secret_key:description: Secret key.
+docker_container_authentik_secret_key: "MZcPm6VeXTbJAot9E8p1fqxN/fbz+8EMUjbRNcnI2NfeFU0uv5q4hNKgS/x7xOPhXnw7etY5qxEg6lXg"
+
+# ------------
+# Docker image
+# ------------
+
+# @var docker_image_authentik_name:description: Repository path and tag for the container image.
+docker_image_authentik_name: "ghcr.io/goauthentik/server:2024.12.3"
+
+# @var docker_image_authentik_pull:description: Indicate to always pull the docker image.
+docker_image_authentik_pull: false
+
+# ----------------
+# Docker container
+# ----------------
+
+# @var docker_container_authentik_name:description: Name for the container
+docker_container_authentik_name: "authentik"
+
+# @var docker_container_authentik_image:description: >
+# Repository path and tag used to create the container.
+# If an image is not found or pull is true, the image will be pulled from the registry.
+# If no tag is included, latest will be used.
+# @end
+docker_container_authentik_image: "{{ docker_image_authentik_name }}"
+
+# @var docker_container_authentik_volume_dir:description: >
+# Volume mount host directory, where Treafik config files are stored.
+# @end
+docker_container_authentik_volume_dir: "{{ docker_container__base__volume_dir }}/{{ docker_container_authentik_name }}"
+
+
+# @var docker_container_authentik_env:description: >
+# Dictionery of key,value pairs for docker
+# environment variables to configure authentik.
+# @end
+docker_container_authentik_env:
+  AUTHENTIK_REDIS__HOST: "redis"
+  AUTHENTIK_POSTGRESQL__HOST: "db"
+  AUTHENTIK_POSTGRESQL__USER: "{{ docker_container_authentik_database_user }}"
+  AUTHENTIK_POSTGRESQL__NAME: "{{ docker_container_authentik_database_name }}"
+  AUTHENTIK_POSTGRESQL__PASSWORD: "{{ docker_container_authentik_database_password }}"
+  AUTHENTIK_SECRET_KEY: "{{ docker_container_authentik_secret_key }}"
+
+# @var docker_container_authentik_volumes:description: >
+# List of volumes to mount within the container.
+# @end
+docker_container_authentik_volumes:
+  - "{{ docker_container_authentik_volume_dir }}/media:/media"
+  - "{{ docker_container_authentik_volume_dir }}/custom-templates:/templates"
+
+# @var docker_container_authentik_labels:description: >
+# Dictionary of key value pairs for container labels.
+#
+# Example:
+#
+# ```yaml
+#
+# docker_container_authentik_labels:
+#
+#   traefik.enable: "true"
+#
+# ```
+#
+# @end
+docker_container_authentik_labels: {}
+
+# @var docker_container_authentik_networks:description: >
+# List of networks the container belongs to.
+# @end
+docker_container_authentik_networks:
+  - name: "{{ docker_network_authentik_name }}"
+    links:
+      - "{{ docker_container_authentikdb_name }}:db"
+      - "{{ docker_container_authentikredis_name }}:redis"
+
+# @var docker_container_authentik_ports:description: >
+# List of ports to publish from the container to the host.
+# @end
+docker_container_authentik_ports:
+  - "9000:9000"
+  - "9443:9443"
+
+# @var docker_container_authentik_comparisons:description: >
+# Allows to specify how properties of existing containers are compared with module options 
+# to decide whether the container should be recreated / updated or not.
+# @end
+docker_container_authentik_comparisons:
+  image: strict
+  env: strict
+  volumes: strict
+
+# docker_container_authentik_auto_remove: no
+docker_container_authentik_command: 'server'
+# docker_container_authentik_detach: yes
+# docker_container_authentik_env_file: "{{ docker_container_authentik_volume_dir }}/.env"
+# docker_container_authentik_init: no
+# docker_container_authentik_interactive: no
+# docker_container_authentik_keep_volumes: yes
+# docker_container_authentik_memory: "0"
+# docker_container_authentik_paused: no
+# docker_container_authentik_privileged: no
+# docker_container_authentik_pull: no
+# docker_container_authentik_read_only: no
+# docker_container_authentik_recreate: no
+# docker_container_authentik_restart: no
+# docker_container_authentik_restart_policy: always
+# docker_container_authentik_state: started
+# docker_container_authentik_tty: no
+# docker_container_authentik_networks_cli_compatible: yes
+
+# --------------
+# Docker network
+# --------------
+
+# @var docker_network_authentik_name:description: >
+# Name of the docker network created for authentik.
+# @end
+docker_network_authentik_name: "{{ docker_container_authentik_name }}_backend"
+# docker_network_authentik_driver: bridge
+# docker_network_authentik_attachable: yes
+# docker_network_authentik_enable_ipv6: no
+# docker_network_authentik_internal: no
+
+# -------------
+# Restic Backup
+# -------------
+# @var docker_container_authentik_restic_enable:description: >
+# Enable restic backup for the container's mounted volumes.
+# @end
+docker_container_authentik_restic_enable: false
+
+# @var docker_container_authentik_restic_s3_endpoint:description: >
+# Minio S3 endpoint for restic backup storage.
+#
+# Example:
+#
+# ```yaml
+#
+# docker_container__base__restic_s3_endpoint: "https://minio.{{ dns_domain }}"
+#
+# docker_container_authentik_restic_s3_endpoint: "{{ docker_container__base__restic_s3_endpoint }}"
+#
+# ```
+#
+# @end
+docker_container_authentik_restic_s3_endpoint: "{{ docker_container__base__restic_s3_endpoint }}"
+
+# @var docker_container_authentik_restic_s3_bucket_name:description: >
+# Minio S3 bucket name for restic backup storage.
+# @end
+docker_container_authentik_restic_s3_bucket_name: "restic-{{ docker_container_authentik_name }}"
+
+# @var docker_container_authentik_restic_s3_repo:description: >
+# Minio S3 repo URL for restic backup storage.
+# @end
+docker_container_authentik_restic_s3_repo: "s3:{{ docker_container_authentik_restic_s3_endpoint }}/{{ docker_container_authentik_restic_s3_bucket_name }}"
+
+# @var docker_container_authentik_restic_s3_repo_password:description: >
+# Minio S3 repo password for restic backup storage.
+# @end
+docker_container_authentik_restic_s3_repo_password: "{{ docker_container__base__restic_s3_repo_password }}"
+
+# @var docker_container_authentik_restic_s3_repo_access_key:description: >
+# Minio S3 repo access key for restic backup storage.
+# @end
+docker_container_authentik_restic_s3_repo_access_key: "{{ docker_container__base__restic_s3_repo_access_key }}"
+# @var docker_container_authentik_restic_s3_repo_secret_key:description: >
+# Minio S3 repo secret key for restic backup storage.
+# @end
+docker_container_authentik_restic_s3_repo_secret_key: "{{ docker_container__base__restic_s3_repo_secret_key }}"
+
+# docker_container_authentik_restic_s3_seed_repo: "s3:{{ docker_container__base__restic_s3_seed_endpoint }}/{{ docker_container_authentik_restic_s3_bucket_name }}"
+# docker_container_authentik_restic_s3_seed_repo_password: "{{ docker_container__base__restic_s3_repo_password }}"
+
+# @var docker_container_authentik_restic_retention:description: >
+# Retention settions for `restic forget` after the `restic backup`.
+# @end
+docker_container_authentik_restic_retention:
+  keep_last: 1
+  # keep_hourly: 1
+  keep_daily: 7
+  keep_weekly: 4
+  # keep_monthly: 6
+  # keep_yearly
+
+# @var docker_container_authentik_restic_tag:description: >
+# Tag for the `restic backup` command
+# @end
+docker_container_authentik_restic_tag: "{{ docker_container_authentik_name }}"
+
+
+
+# ------------
+# Docker image
+# ------------
+
+# @var docker_image_authentikworker_name:description: Repository path and tag for the container image.
+docker_image_authentikworker_name: "ghcr.io/goauthentik/server:2024.12.3"
+
+# @var docker_image_authentikworker_pull:description: Indicate to always pull the docker image.
+docker_image_authentikworker_pull: false
+
+# ----------------
+# Docker container
+# ----------------
+
+# @var docker_container_authentikworker_name:description: Name for the container
+docker_container_authentikworker_name: "authentikworker"
+
+# @var docker_container_authentikworker_image:description: >
+# Repository path and tag used to create the container.
+# If an image is not found or pull is true, the image will be pulled from the registry.
+# If no tag is included, latest will be used.
+# @end
+docker_container_authentikworker_image: "{{ docker_image_authentikworker_name }}"
+
+# @var docker_container_authentikworker_volume_dir:description: >
+# Volume mount host directory, where Treafik config files are stored.
+# @end
+docker_container_authentikworker_volume_dir: "{{ docker_container__base__volume_dir }}/{{ docker_container_authentik_name }}"
+
+# @var docker_container_authentikworker_env:description: >
+# Dictionery of key,value pairs for docker
+# environment variables to configure authentikworker.
+# @end
+docker_container_authentikworker_env:
+  AUTHENTIK_REDIS__HOST: "redis"
+  AUTHENTIK_POSTGRESQL__HOST: "db"
+  AUTHENTIK_POSTGRESQL__USER: "{{ docker_container_authentik_database_user }}"
+  AUTHENTIK_POSTGRESQL__NAME: "{{ docker_container_authentik_database_name }}"
+  AUTHENTIK_POSTGRESQL__PASSWORD: "{{ docker_container_authentik_database_password }}"
+  AUTHENTIK_SECRET_KEY: "{{ docker_container_authentik_secret_key }}"
+
+# @var docker_container_authentikworker_volumes:description: >
+# List of volumes to mount within the container.
+# @end
+docker_container_authentikworker_volumes:
+  - "/var/run/docker.sock:/var/run/docker.sock"
+  - "{{ docker_container_authentik_volume_dir }}/media:/media"
+  - "{{ docker_container_authentik_volume_dir }}/certs:/certs"
+  - "{{ docker_container_authentik_volume_dir }}/custom-templates:/templates"
+
+# @var docker_container_authentikworker_labels:description: >
+# Dictionary of key value pairs for container labels.
+#
+# Example:
+#
+# ```yaml
+#
+# docker_container_authentikworker_labels:
+#
+#   traefik.enable: "true"
+#
+# ```
+#
+# @end
+docker_container_authentikworker_labels: {}
+
+# @var docker_container_authentikworker_networks:description: >
+# List of networks the container belongs to.
+# @end
+docker_container_authentikworker_networks:
+  - name: "{{ docker_network_authentikworker_name }}"
+    links:
+      - "{{ docker_container_authentikdb_name }}:db"
+      - "{{ docker_container_authentikredis_name }}:redis"
+
+# @var docker_container_authentikworker_ports:description: >
+# List of ports to publish from the container to the host.
+# @end
+docker_container_authentikworker_ports: []
+
+# @var docker_container_authentikworker_comparisons:description: >
+# Allows to specify how properties of existing containers are compared with module options 
+# to decide whether the container should be recreated / updated or not.
+# @end
+docker_container_authentikworker_comparisons:
+  image: strict
+  env: strict
+  volumes: strict
+
+# docker_container_authentikworker_auto_remove: no
+docker_container_authentikworker_command: 'worker'
+# docker_container_authentikworker_detach: yes
+# docker_container_authentikworker_env_file: "{{ docker_container_authentik_volume_dir }}/.env"
+# docker_container_authentikworker_init: no
+# docker_container_authentikworker_interactive: no
+# docker_container_authentikworker_keep_volumes: yes
+# docker_container_authentikworker_memory: "0"
+# docker_container_authentikworker_paused: no
+# docker_container_authentikworker_privileged: no
+# docker_container_authentikworker_pull: no
+# docker_container_authentikworker_read_only: no
+# docker_container_authentikworker_recreate: no
+# docker_container_authentikworker_restart: no
+# docker_container_authentikworker_restart_policy: always
+# docker_container_authentikworker_state: started
+# docker_container_authentikworker_tty: no
+# docker_container_authentikworker_networks_cli_compatible: yes
+
+# --------------
+# Docker network
+# --------------
+
+# @var docker_network_authentikworker_name:description: >
+# Name of the docker network created for authentikworker.
+# @end
+docker_network_authentikworker_name: "{{ docker_container_authentik_name }}_backend"
+# docker_network_authentikworker_driver: bridge
+# docker_network_authentikworker_attachable: yes
+# docker_network_authentikworker_enable_ipv6: no
+# docker_network_authentikworker_internal: no
+
+
+
+# ------------
+# Docker image
+# ------------
+
+# @var docker_image_authentikdb_name:description: Repository path and tag for the container image.
+docker_image_authentikdb_name: "docker.io/library/postgres:16-alpine"
+
+# @var docker_image_authentikdb_pull:description: Indicate to always pull the docker image.
+docker_image_authentikdb_pull: false
+
+# ----------------
+# Docker container
+# ----------------
+
+# @var docker_container_authentikdb_name:description: Name for the container
+docker_container_authentikdb_name: "authentikdb"
+
+# @var docker_container_authentikdb_image:description: >
+# Repository path and tag used to create the container.
+# If an image is not found or pull is true, the image will be pulled from the registry.
+# If no tag is included, latest will be used.
+# @end
+docker_container_authentikdb_image: "{{ docker_image_authentikdb_name }}"
+
+# @var docker_container_authentikdb_volume_dir:description: >
+# Volume mount host directory, where Treafik config files are stored.
+# @end
+docker_container_authentikdb_volume_dir: "{{ docker_container__base__volume_dir }}/{{ docker_container_authentik_name }}"
+
+# @var docker_container_authentikdb_env:description: >
+# Dictionery of key,value pairs for docker
+# environment variables to configure authentikdb.
+# @end
+docker_container_authentikdb_env:
+  POSTGRES_PASSWORD: "{{ docker_container_authentik_database_password }}"
+  POSTGRES_USER: "{{ docker_container_authentik_database_user }}"
+  POSTGRES_DB: "{{ docker_container_authentik_database_name }}"
+
+# @var docker_container_authentikdb_volumes:description: >
+# List of volumes to mount within the container.
+# @end
+docker_container_authentikdb_volumes:
+  - "{{ docker_container_authentik_volume_dir }}/postgres:/var/lib/postgresql/data"
+
+# @var docker_container_authentikdb_labels:description: >
+# Dictionary of key value pairs for container labels.
+#
+# Example:
+#
+# ```yaml
+#
+# docker_container_authentikdb_labels:
+#
+#   traefik.enable: "true"
+#
+# ```
+#
+# @end
+docker_container_authentikdb_labels: {}
+
+# @var docker_container_authentikdb_networks:description: >
+# List of networks the container belongs to.
+# @end
+docker_container_authentikdb_networks:
+  - name: "{{ docker_network_authentikdb_name }}"
+
+# @var docker_container_authentikdb_ports:description: >
+# List of ports to publish from the container to the host.
+# @end
+docker_container_authentikdb_ports: []
+
+# @var docker_container_authentikdb_comparisons:description: >
+# Allows to specify how properties of existing containers are compared with module options 
+# to decide whether the container should be recreated / updated or not.
+# @end
+docker_container_authentikdb_comparisons:
+  image: strict
+  env: strict
+  volumes: strict
+
+# docker_container_authentikdb_auto_remove: no
+# docker_container_authentikdb_command: ""
+# docker_container_authentikdb_detach: yes
+# docker_container_authentikdb_env_file: "{{ docker_container_authentik_volume_dir }}/.env"
+docker_container_authentikdb_healthcheck: 
+  test: ["CMD-SHELL", "pg_isready -d {{ docker_container_authentik_database_name }} -U {{ docker_container_authentik_database_user }}"]
+  start_period: 20s
+  interval: 30s
+  retries: 5
+  timeout: 5s
+# docker_container_authentikdb_init: no
+# docker_container_authentikdb_interactive: no
+# docker_container_authentikdb_keep_volumes: yes
+# docker_container_authentikdb_memory: "0"
+# docker_container_authentikdb_paused: no
+# docker_container_authentikdb_privileged: no
+# docker_container_authentikdb_pull: no
+# docker_container_authentikdb_read_only: no
+# docker_container_authentikdb_recreate: no
+# docker_container_authentikdb_restart: no
+# docker_container_authentikdb_restart_policy: always
+# docker_container_authentikdb_state: started
+# docker_container_authentikdb_tty: no
+# docker_container_authentikdb_networks_cli_compatible: yes
+
+# --------------
+# Docker network
+# --------------
+
+# @var docker_network_authentikdb_name:description: >
+# Name of the docker network created for authentikdb.
+# @end
+docker_network_authentikdb_name: "{{ docker_container_authentik_name }}_backend"
+# docker_network_authentikdb_driver: bridge
+# docker_network_authentikdb_attachable: yes
+# docker_network_authentikdb_enable_ipv6: no
+# docker_network_authentikdb_internal: no
+
+
+# ------------
+# Docker image
+# ------------
+
+# @var docker_image_authentikredis_name:description: Repository path and tag for the container image.
+docker_image_authentikredis_name: "docker.io/library/redis:alpine"
+
+# @var docker_image_authentikredis_pull:description: Indicate to always pull the docker image.
+docker_image_authentikredis_pull: false
+
+# ----------------
+# Docker container
+# ----------------
+
+# @var docker_container_authentikredis_name:description: Name for the container
+docker_container_authentikredis_name: "authentikredis"
+
+# @var docker_container_authentikredis_image:description: >
+# Repository path and tag used to create the container.
+# If an image is not found or pull is true, the image will be pulled from the registry.
+# If no tag is included, latest will be used.
+# @end
+docker_container_authentikredis_image: "{{ docker_image_authentikredis_name }}"
+
+# @var docker_container_authentikredis_volume_dir:description: >
+# Volume mount host directory, where Treafik config files are stored.
+# @end
+docker_container_authentikredis_volume_dir: "{{ docker_container__base__volume_dir }}/{{ docker_container_authentik_name }}"
+
+# @var docker_container_authentikredis_env:description: >
+# Dictionery of key,value pairs for docker
+# environment variables to configure authentikredis.
+# @end
+docker_container_authentikredis_env: {}
+
+# @var docker_container_authentikredis_volumes:description: >
+# List of volumes to mount within the container.
+# @end
+docker_container_authentikredis_volumes: []
+
+# @var docker_container_authentikredis_labels:description: >
+# Dictionary of key value pairs for container labels.
+#
+# Example:
+#
+# ```yaml
+#
+# docker_container_authentikredis_labels:
+#
+#   traefik.enable: "true"
+#
+# ```
+#
+# @end
+docker_container_authentikredis_labels: {}
+
+# @var docker_container_authentikredis_networks:description: >
+# List of networks the container belongs to.
+# @end
+docker_container_authentikredis_networks:
+  - name: "{{ docker_network_authentikredis_name }}"
+
+# @var docker_container_authentikredis_ports:description: >
+# List of ports to publish from the container to the host.
+# @end
+docker_container_authentikredis_ports: []
+
+# @var docker_container_authentikredis_comparisons:description: >
+# Allows to specify how properties of existing containers are compared with module options 
+# to decide whether the container should be recreated / updated or not.
+# @end
+docker_container_authentikredis_comparisons:
+  image: strict
+  env: strict
+  volumes: strict
+
+# docker_container_authentikredis_auto_remove: no
+# docker_container_authentikredis_command: 'redis-server --requirepass {{ docker_container_authentik_redis_host_password }}'
+docker_container_authentikredis_command: '--save 60 1 --loglevel warning'
+# docker_container_authentikredis_detach: yes
+# docker_container_authentikredis_env_file: "{{ docker_container_authentik_volume_dir }}/.env"
+docker_container_authentikredis_healthcheck: 
+  test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+  start_period: 20s
+  interval: 30s
+  retries: 5
+  timeout: 3s
+# docker_container_authentikredis_init: no
+# docker_container_authentikredis_interactive: no
+# docker_container_authentikredis_keep_volumes: yes
+# docker_container_authentikredis_memory: "0"
+# docker_container_authentikredis_paused: no
+# docker_container_authentikredis_privileged: no
+# docker_container_authentikredis_pull: no
+# docker_container_authentikredis_read_only: no
+# docker_container_authentikredis_recreate: no
+# docker_container_authentikredis_restart: no
+# docker_container_authentikredis_restart_policy: always
+# docker_container_authentikredis_state: started
+# docker_container_authentikredis_tty: no
+# docker_container_authentikredis_networks_cli_compatible: yes
+
+# --------------
+# Docker network
+# --------------
+
+# @var docker_network_authentikredis_name:description: >
+# Name of the docker network created for authentikredis.
+# @end
+docker_network_authentikredis_name: "{{ docker_container_authentik_name }}_backend"
+# docker_network_authentikredis_driver: bridge
+# docker_network_authentikredis_attachable: yes
+# docker_network_authentikredis_enable_ipv6: no
+# docker_network_authentikredis_internal: no
+...

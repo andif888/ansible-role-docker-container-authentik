@@ -1,0 +1,215 @@
+---
+# tasks file for ansible-role-docker-container-authentik
+
+- name: docker_container - {{ docker_container_authentik_volume_dir }}
+  ansible.builtin.file:
+    path: "{{ docker_container_authentik_volume_dir }}/{{ item.path }}"
+    state: directory
+    owner: "{{ item.owner | default('root') }}"
+    group: "{{item.group | default('root') }}"
+    mode: "{{ item.mode | default('755') }}"
+  loop:
+    - { path: "media", owner: "1000", group: "1000" }
+
+- name: docker_image pull {{ docker_image_authentikdb_name }}
+  community.docker.docker_image:
+    name: '{{ docker_image_authentikdb_name }}'
+    source: pull
+    # Select platform for pulling. If not specified, will pull whatever docker prefers.
+    pull:
+      platform: amd64
+  when: 
+    - docker_image_authentikdb_pull
+
+- name: docker_image pull {{ docker_image_authentikredis_name }}
+  community.docker.docker_image:
+    name: '{{ docker_image_authentikredis_name }}'
+    source: pull
+    # Select platform for pulling. If not specified, will pull whatever docker prefers.
+    pull:
+      platform: amd64
+  when: 
+    - docker_image_authentikredis_pull
+
+- name: docker_image pull {{ docker_image_authentikworker_name }}
+  community.docker.docker_image:
+    name: '{{ docker_image_authentikworker_name }}'
+    source: pull
+    # Select platform for pulling. If not specified, will pull whatever docker prefers.
+    pull:
+      platform: amd64
+  when: 
+    - docker_image_authentikworker_pull
+
+- name: docker_image pull {{ docker_image_authentik_name }}
+  community.docker.docker_image:
+    name: '{{ docker_image_authentik_name }}'
+    source: pull
+    # Select platform for pulling. If not specified, will pull whatever docker prefers.
+    pull:
+      platform: amd64
+  when: 
+    - docker_image_authentik_pull
+
+- name: docker_network {{ docker_container_authentik_name }}
+  community.docker.docker_network:
+    name: "{{ docker_network_authentik_name }}"
+    driver: "{{ docker_network_authentik_driver | default('bridge') }}"
+    attachable: "{{ docker_network_authentik_attachable | default(true) }}"
+    enable_ipv6: "{{ docker_network_authentik_enable_ipv6 | default(false) }}"
+    internal: "{{ docker_network_authentik_internal | default(false) }}"
+    state: present
+
+- name: docker_container {{ docker_container_authentikdb_name }}
+  community.docker.docker_container:
+    command: "{{ docker_container_authentikdb_command | default(omit) }}"
+    name: "{{ docker_container_authentikdb_name }}"
+    comparisons: "{{ docker_container_authentikdb_comparisons }}"
+    image: "{{ docker_container_authentikdb_image }}"
+    state: "{{ docker_container_authentikdb_state | default('started') }}"
+    recreate: "{{ docker_container_authentikdb_recreate | default(false) }}"
+    restart: "{{ docker_container_authentikdb_restart | default(false) }}"
+    restart_policy: "{{ docker_container_authentikdb_restart_policy | default('always') }}"
+    container_default_behavior: no_defaults
+    auto_remove: "{{ docker_container_authentikdb_auto_remove | default(false) }}"
+    detach: "{{ docker_container_authentikdb_detach | default(true) }}"
+    healthcheck: "{{ docker_container_authentikdb_healthcheck | default(omit) }}"
+    init: "{{ docker_container_authentikdb_init | default(false) }}"
+    interactive: "{{ docker_container_authentikdb_interactive | default(false) }}"
+    keep_volumes: "{{ docker_container_authentikdb_keep_volumes | default(true) }}"
+    memory: "{{ docker_container_authentikdb_memory | default('0') }}"
+    paused: "{{ docker_container_authentikdb_paused | default(false) }}"
+    privileged: "{{ docker_container_authentikdb_privileged | default(false) }}"
+    read_only: "{{ docker_container_authentikdb_read_only | default(false) }}"
+    tty: "{{ docker_container_authentikdb_tty | default(false) }}"
+    env_file: "{{ docker_container_authentikdb_env_file | default(omit) }}"
+    env: "{{ docker_container_authentikdb_env | default(omit) }}"
+    volumes: "{{ docker_container_authentikdb_volumes | default(omit) }}"
+    labels: "{{ docker_container_authentikdb_labels | default(omit) }}"
+    networks_cli_compatible: "{{ docker_container_authentikdb_networks_cli_compatible | default(true) }}"
+    network_mode: "{{ docker_network_authentikdb_name }}"
+    pull: "{{ docker_container_authentikdb_pull | default(false) }}"
+    networks: "{{ docker_container_authentikdb_networks }}"
+    published_ports: "{{ docker_container_authentikdb_ports | default(omit) }}"
+
+- name: docker_container {{ docker_container_authentikredis_name }}
+  community.docker.docker_container:
+    command: "{{ docker_container_authentikredis_command | default(omit) }}"
+    name: "{{ docker_container_authentikredis_name }}"
+    comparisons: "{{ docker_container_authentikredis_comparisons }}"
+    image: "{{ docker_container_authentikredis_image }}"
+    state: "{{ docker_container_authentikredis_state | default('started') }}"
+    recreate: "{{ docker_container_authentikredis_recreate | default(false) }}"
+    restart: "{{ docker_container_authentikredis_restart | default(false) }}"
+    restart_policy: "{{ docker_container_authentikredis_restart_policy | default('always') }}"
+    container_default_behavior: no_defaults
+    auto_remove: "{{ docker_container_authentikredis_auto_remove | default(false) }}"
+    detach: "{{ docker_container_authentikredis_detach | default(true) }}"
+    healthcheck: "{{ docker_container_authentikredis_healthcheck | default(omit) }}"
+    init: "{{ docker_container_authentikredis_init | default(false) }}"
+    interactive: "{{ docker_container_authentikredis_interactive | default(false) }}"
+    keep_volumes: "{{ docker_container_authentikredis_keep_volumes | default(true) }}"
+    memory: "{{ docker_container_authentikredis_memory | default('0') }}"
+    paused: "{{ docker_container_authentikredis_paused | default(false) }}"
+    privileged: "{{ docker_container_authentikredis_privileged | default(false) }}"
+    read_only: "{{ docker_container_authentikredis_read_only | default(false) }}"
+    tty: "{{ docker_container_authentikredis_tty | default(false) }}"
+    env_file: "{{ docker_container_authentikredis_env_file | default(omit) }}"
+    env: "{{ docker_container_authentikredis_env | default(omit) }}"
+    volumes: "{{ docker_container_authentikredis_volumes | default(omit) }}"
+    labels: "{{ docker_container_authentikredis_labels | default(omit) }}"
+    networks_cli_compatible: "{{ docker_container_authentikredis_networks_cli_compatible | default(true) }}"
+    network_mode: "{{ docker_network_authentikredis_name }}"
+    pull: "{{ docker_container_authentikredis_pull | default(false) }}"
+    networks: "{{ docker_container_authentikredis_networks }}"
+    published_ports: "{{ docker_container_authentikredis_ports | default(omit) }}"
+
+- name: docker_container {{ docker_container_authentikworker_name }}
+  community.docker.docker_container:
+    command: "{{ docker_container_authentikworker_command | default(omit) }}"
+    name: "{{ docker_container_authentikworker_name }}"
+    comparisons: "{{ docker_container_authentikworker_comparisons }}"
+    image: "{{ docker_container_authentikworker_image }}"
+    state: "{{ docker_container_authentikworker_state | default('started') }}"
+    recreate: "{{ docker_container_authentikworker_recreate | default(false) }}"
+    restart: "{{ docker_container_authentikworker_restart | default(false) }}"
+    restart_policy: "{{ docker_container_authentikworker_restart_policy | default('always') }}"
+    container_default_behavior: no_defaults
+    auto_remove: "{{ docker_container_authentikworker_auto_remove | default(false) }}"
+    detach: "{{ docker_container_authentikworker_detach | default(true) }}"
+    init: "{{ docker_container_authentikworker_init | default(false) }}"
+    interactive: "{{ docker_container_authentikworker_interactive | default(false) }}"
+    keep_volumes: "{{ docker_container_authentikworker_keep_volumes | default(true) }}"
+    memory: "{{ docker_container_authentikworker_memory | default('0') }}"
+    paused: "{{ docker_container_authentikworker_paused | default(false) }}"
+    privileged: "{{ docker_container_authentikworker_privileged | default(false) }}"
+    read_only: "{{ docker_container_authentikworker_read_only | default(false) }}"
+    tty: "{{ docker_container_authentikworker_tty | default(false) }}"
+    env_file: "{{ docker_container_authentikworker_env_file | default(omit) }}"
+    env: "{{ docker_container_authentikworker_env | default(omit) }}"
+    volumes: "{{ docker_container_authentikworker_volumes | default(omit) }}"
+    labels: "{{ docker_container_authentikworker_labels | default(omit) }}"
+    networks_cli_compatible: "{{ docker_container_authentikworker_networks_cli_compatible | default(true) }}"
+    network_mode: "{{ docker_network_authentikworker_name }}"
+    pull: "{{ docker_container_authentikworker_pull | default(false) }}"
+    networks: "{{ docker_container_authentikworker_networks }}"
+    published_ports: "{{ docker_container_authentikworker_ports | default(omit) }}"
+
+- name: docker_container {{ docker_container_authentik_name }}
+  community.docker.docker_container:
+    command: "{{ docker_container_authentik_command | default(omit) }}"
+    name: "{{ docker_container_authentik_name }}"
+    comparisons: "{{ docker_container_authentik_comparisons }}"
+    image: "{{ docker_container_authentik_image }}"
+    state: "{{ docker_container_authentik_state | default('started') }}"
+    recreate: "{{ docker_container_authentik_recreate | default(false) }}"
+    restart: "{{ docker_container_authentik_restart | default(false) }}"
+    restart_policy: "{{ docker_container_authentik_restart_policy | default('always') }}"
+    container_default_behavior: no_defaults
+    auto_remove: "{{ docker_container_authentik_auto_remove | default(false) }}"
+    detach: "{{ docker_container_authentik_detach | default(true) }}"
+    init: "{{ docker_container_authentik_init | default(false) }}"
+    interactive: "{{ docker_container_authentik_interactive | default(false) }}"
+    keep_volumes: "{{ docker_container_authentik_keep_volumes | default(true) }}"
+    memory: "{{ docker_container_authentik_memory | default('0') }}"
+    paused: "{{ docker_container_authentik_paused | default(false) }}"
+    privileged: "{{ docker_container_authentik_privileged | default(false) }}"
+    read_only: "{{ docker_container_authentik_read_only | default(false) }}"
+    tty: "{{ docker_container_authentik_tty | default(false) }}"
+    env_file: "{{ docker_container_authentik_env_file | default(omit) }}"
+    env: "{{ docker_container_authentik_env | default(omit) }}"
+    volumes: "{{ docker_container_authentik_volumes | default(omit) }}"
+    labels: "{{ docker_container_authentik_labels | default(omit) }}"
+    networks_cli_compatible: "{{ docker_container_authentik_networks_cli_compatible | default(true) }}"
+    network_mode: "{{ docker_network_authentik_name }}"
+    pull: "{{ docker_container_authentik_pull | default(false) }}"
+    networks: "{{ docker_container_authentik_networks }}"
+    published_ports: "{{ docker_container_authentik_ports | default(omit) }}"
+    dns_servers: "{{ docker_container_authentik_dns_servers | default(omit) }}"
+    etc_hosts: "{{ docker_container_authentik_etc_hosts | default(omit) }}"
+  register: docker_container_authentik_result
+
+# - name: docker_container {{ docker_container_authentik_name }} install smbclient
+#   community.docker.docker_container_exec:
+#     container: "{{ docker_container_authentik_name }}"
+#     argv:
+#       - /bin/bash
+#       - "-c"
+#       - "apt-get update && apt-get install -y procps smbclient libsmbclient-dev && pecl install smbclient && docker-php-ext-enable smbclient && rm -rf /var/lib/apt/lists/*" 
+#   register: result_install_smbclient
+#   when: docker_container_authentik_install_smbclient
+
+# - name: Debug result_install_smbclient
+#   ansible.builtin.debug:
+#     var: result_install_smbclient
+#   when: docker_container_authentik_install_smbclient
+
+# - name: Cron {{ docker_container_authentik_name }}
+#   cron:
+#     job: "/usr/bin/docker exec --user www-data {{ docker_container_authentik_name }} php -f /var/www/html/cron.php"
+#     name: "cron_authentik_{{ docker_container_authentik_name }}"
+#     minute: "{{ docker_container_authentik_cron_minutes }}"
+#     user: root
+#     state: present
+#     disabled: "{{ docker_container_authentik_cron_disabled }}"
+...
