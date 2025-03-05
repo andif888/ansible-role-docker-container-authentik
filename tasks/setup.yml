@@ -154,6 +154,7 @@
     pull: "{{ docker_container_authentikworker_pull | default(false) }}"
     networks: "{{ docker_container_authentikworker_networks }}"
     published_ports: "{{ docker_container_authentikworker_ports | default(omit) }}"
+    etc_hosts: "{{ docker_container_authentikworker_etc_hosts | default(omit) }}"
 
 - name: docker_container {{ docker_container_authentik_name }}
   community.docker.docker_container:
